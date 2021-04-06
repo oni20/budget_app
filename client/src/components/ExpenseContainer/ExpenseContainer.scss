@@ -1,0 +1,30 @@
+.main {
+    &__container {
+        display: flex;
+        justify-content: space-evenly;
+    }
+
+    &__header {
+        text-align: center;
+        font-family: cursive;
+        color: indigo;
+    }
+
+    &__flex-div {
+        border: 1px solid grey;
+        width: 200px;
+        height: 100px;
+        margin-top: 2rem;
+        border-radius: 0.4rem;
+    }
+}
+.mar-bottom{
+    margin-bottom: 20px;
+}
+.MuiButton-root{
+    margin-bottom: 20px;
+    background: linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%);
+}
+.breadCrumb{
+    margin-bottom: 30px;
+}

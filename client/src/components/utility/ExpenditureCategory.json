@@ -1,0 +1,31 @@
+{
+	"category": [{
+			"value": "food",
+			"label": "Food"
+		},
+		{
+			"value": "gas",
+			"label": "Gas"
+		},
+		{
+			"value": "shopping",
+			"label": "Shopping"
+		},
+		{
+			"value": "internet",
+			"label": "Internet"
+		},
+		{
+			"value": "houseInsurance",
+			"label": "Home Insurance"
+		},
+		{
+			"value": "autoPremium",
+			"label": "Car installment"
+		},
+		{
+			"value": "travel",
+			"label": "Travel"
+		}
+	]
+}
