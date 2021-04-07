@@ -15,6 +15,9 @@ import Button from '@material-ui/core/Button';
 import Breadcrumbs from '@material-ui/core/Breadcrumbs';
 import Link from '@material-ui/core/Link';
 import MuiAlert from '@material-ui/lab/Alert';
+import Badge from '@material-ui/core/Badge';
+import Avatar from '@material-ui/core/Avatar';
+import { withStyles } from '@material-ui/core/styles';
 
 import InfoCard from '../InfoCard/InfoCard';
 import DataTable from '../DataTable/DataTable';
@@ -22,10 +25,6 @@ import ExpenditureCategory from '../utility/ExpenditureCategory.json';
 import PieChart from '../Chart/PieChart';
 
 import "./ExpenseContainer.scss";
-
-import Badge from '@material-ui/core/Badge';
-import Avatar from '@material-ui/core/Avatar';
-import { withStyles } from '@material-ui/core/styles';
 
 const Alert = (props) => {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
@@ -68,15 +67,12 @@ class ExpenseContainer extends Component {
             text: '',
             value: ''
         },
-        lastItemId: 9,
-        income: '',
-        expenses: '',
-        savings: ''
+        lastItemId: 0,
+        deleteRows: []
     }
 
     componentDidMount() {
         const userID = window.location.search.split('=')[1];
-
         axios
             .get(`http://localhost:8080/input/getuserinfo?id=${userID}`, { withCredentials: true })
             .then(res => {
@@ -102,6 +98,12 @@ class ExpenseContainer extends Component {
         return new Date().getFullYear();
     }
 
+    handleRowSelection = deleteRows => {
+        this.setState({
+            deleteRows: deleteRows.selectionModel
+        });
+    }
+
     handleCategoryChange = (event) => {
         this.setState({
             category: {
@@ -111,11 +113,10 @@ class ExpenseContainer extends Component {
         })
     }
 
+    // Add bill
     handleSubmit = (e) => {
         e.preventDefault();
-
         const form = e.target, currYear = this.getYear(), currMonth = this.getMonth();
-
         let { userDetails, lastItemId, category } = this.state, existingExpenditure = userDetails.expenditure;
 
         existingExpenditure.push({
@@ -149,8 +150,30 @@ class ExpenseContainer extends Component {
             })
     }
 
+    deleteExpenses = () => {
+        const { userDetails, deleteRows } = this.state,
+            deletePayLoad = {
+                email: userDetails.email,
+                deletedRows: deleteRows
+            }
+
+        axios
+            .delete('http://localhost:8080/input/deleteexpense', { data: deletePayLoad })
+            .then(res => {
+                const newUserData = JSON.parse(res.data);
+                this.setState({
+                    lastItemId: newUserData.expenditure.length > 0 ? newUserData.expenditure[newUserData.expenditure.length - 1].id : 0,
+                    userDetails: newUserData,
+                    deleteRows: []
+                });
+            })
+            .catch(err => {
+                console.log(err)
+            })
+    }
+
     render() {
-        const { userDetails } = this.state,
+        const { userDetails, deleteRows } = this.state,
             currYear = this.getYear(),
             currMonth = this.getMonth(),
             filteredDetails = userDetails ? userDetails.expenditure.filter(spendLine => spendLine.year == currYear && spendLine.month == currMonth) : [],
@@ -158,27 +181,13 @@ class ExpenseContainer extends Component {
             expenses = filteredDetails.length > 0
                 ? filteredDetails.reduce((accumulator, currentValue) => accumulator + currentValue.amount, 0)
                 : 0,
-            savings = income - expenses;
-
-        const classes = makeStyles((theme) => ({
-            root: {
-                '& .MuiTextField-root': {
-                    margin: theme.spacing(2),
-                    width: '35ch',
-                },
-                '& .MuiFormControl-root': {
-                    margin: theme.spacing(2),
-                    width: '35ch',
-                }
-            },
-        }));
-        const userName = userDetails ? userDetails.userName : "";
-
-        const pieChartData = [
-            { value: income, name: 'Income' },
-            { value: expenses, name: 'Expenses' },
-            { value: savings, name: 'Savings' }
-        ];
+            savings = income - expenses,
+            userName = userDetails ? userDetails.userName : "",
+            pieChartData = [
+                { value: income, name: 'Income' },
+                { value: expenses, name: 'Expenses' },
+                { value: savings, name: 'Savings' }
+            ];
 
         return (
             <Layout>
@@ -197,7 +206,7 @@ class ExpenseContainer extends Component {
 
                 <Grid container direction="column" spacing={3}>
                     <Grid container item xs={12}>
-                        <h3>Hi <strong>{userName}{ }</strong>
+                        <h3>Hi <strong>{userName}{'  '}</strong>
                             <StyledBadge
                                 overlap="circle"
                                 anchorOrigin={{
@@ -207,7 +216,8 @@ class ExpenseContainer extends Component {
                                 variant="dot"
                             >
                                 <Avatar alt={userName} src="/static/images/avatar/1.jpg" />
-                            </StyledBadge></h3>                        
+                            </StyledBadge>
+                        </h3>
                         <Grid container spacing={3}>
                             <Grid item xs={12} sm={3}>
                                 <InfoCard
@@ -237,13 +247,13 @@ class ExpenseContainer extends Component {
                     </Grid>
 
                     <Grid item xs={10}>
-                        <form onSubmit={this.handleSubmit} className={classes.root}>
+                        <form onSubmit={this.handleSubmit}>
                             <div className='mar-bottom'>
                                 <Typography variant="h5" component="h3" gutterBottom>Add monthly income</Typography>
 
                                 <Grid container>
-                                    <Grid item xs={4}>
-                                        <FormControl fullWidth className={classes.margin} variant="outlined">
+                                    <Grid item xs={12} sm={6}>
+                                        <FormControl fullWidth variant="outlined">
                                             <InputLabel htmlFor="income">Income</InputLabel>
                                             <OutlinedInput
                                                 id="income"
@@ -260,8 +270,8 @@ class ExpenseContainer extends Component {
                             <div className='mar-bottom'>
                                 <Typography variant="h5" component="h3" gutterBottom>Add expenses</Typography>
 
-                                <Grid container>
-                                    <Grid item xs={4}>
+                                <Grid container spacing={3}>
+                                    <Grid item xs={6} sm={4}>
                                         <TextField
                                             id="category"
                                             select
@@ -271,6 +281,7 @@ class ExpenseContainer extends Component {
                                             onChange={this.handleCategoryChange}
                                             helperText="Please select your expenditure category"
                                             variant="outlined"
+                                            fullWidth
                                             required
                                         >
                                             {ExpenditureCategory.category.map((option) => (
@@ -280,8 +291,8 @@ class ExpenseContainer extends Component {
                                             ))}
                                         </TextField>
                                     </Grid>
-                                    <Grid item xs={6}>
-                                        <FormControl fullWidth className={classes.margin} variant="outlined">
+                                    <Grid item xs={6} sm={4}>
+                                        <FormControl fullWidth variant="outlined">
                                             <InputLabel htmlFor="income">Amount</InputLabel>
                                             <OutlinedInput
                                                 id="amount"
@@ -305,12 +316,18 @@ class ExpenseContainer extends Component {
                             userDetails && userDetails.expenditure &&
                             <div>
                                 <Typography variant="h5" component="h3" gutterBottom>All expenses</Typography>
-                                <DataTable rows={userDetails.expenditure} />
+                                <DataTable rows={userDetails.expenditure} handleRowSelection={this.handleRowSelection} />
+                                {
+                                    deleteRows.length > 0 &&
+                                    <p>
+                                        <Button type="submit" variant="contained" color="primary" onClick={this.deleteExpenses}>Delete record</Button>
+                                    </p>
+                                }
                             </div>
                         }
                     </Grid>
-                    <PieChart data={pieChartData}/>
-                </Grid>                
+                    <PieChart data={pieChartData} />
+                </Grid>
             </Layout>
         );
     }

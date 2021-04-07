@@ -47,4 +47,22 @@ router.post("/addexpense", async (req, res) => {
     }
 });
 
+router.delete("/deleteexpense", async (req, res) => {
+    try {
+        const payLoad = req.body;
+        const users = readUsers();
+        const selectedUserIndex = users.findIndex(user => user.email === payLoad.email);
+        const filteredExpenditure = users[selectedUserIndex].expenditure.filter(item=> !payLoad.deletedRows.includes(item.id.toString()))
+        
+        users[selectedUserIndex].expenditure = filteredExpenditure;
+        fs.writeFileSync("./data/users.json", JSON.stringify(users));
+        
+        res.status(200).json(JSON.stringify(users[selectedUserIndex]));
+        return;
+    }
+    catch (e){
+        res.status(500).send('Server error');
+    }
+});
+
 module.exports = router;
