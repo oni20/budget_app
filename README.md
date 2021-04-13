@@ -16,7 +16,7 @@ We are exploring following tech stack to build responsive UI.
 
 - Front-end
 ```bash
-HTML5, React-material UI,  SCSS, React, React Hooks, React Router DOM
+HTML5, React-material UI,  SCSS, React, React Hooks, React Router DOM, Echart
 ```
 - Back-end
 ```bash
@@ -24,7 +24,7 @@ Node JS, Express JS, MongoDB
 ```
 -Module Builder
 ```bash
-Node, NPM, Next JS
+Node, NPM
 ```
 
 ### Known limitation
